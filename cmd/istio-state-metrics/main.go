@@ -16,6 +16,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/douglas-reid/istio-state-metrics/pkg/client/clientset/versioned"
+	icollectors "github.com/douglas-reid/istio-state-metrics/pkg/collectors"
 	"github.com/douglas-reid/istio-state-metrics/pkg/options"
 )
 
@@ -24,15 +25,11 @@ const (
 	healthzPath = "/healthz"
 )
 
-var (
-	logger = log.New(os.Stdout, "", 0)
-)
-
 // promLogger implements promhttp.Logger
 type promLogger struct{}
 
 func (pl promLogger) Println(v ...interface{}) {
-	logger.Print(v)
+	fmt.Println(v)
 }
 
 func main() {
@@ -41,7 +38,7 @@ func main() {
 
 	err := opts.Parse()
 	if err != nil {
-		logger.Fatalf("Error: %s", err)
+		log.Fatalf("Error: %s", err)
 	}
 
 	if opts.Help {
@@ -51,7 +48,7 @@ func main() {
 
 	var collectors options.CollectorSet
 	if len(opts.Collectors) == 0 {
-		logger.Print("Using default collectors")
+		fmt.Println("Using default collectors")
 		collectors = options.DefaultCollectors
 	} else {
 		collectors = opts.Collectors
@@ -65,22 +62,22 @@ func main() {
 	}
 
 	if namespaces.IsAllNamespaces() {
-		logger.Print("Using all namespace")
+		fmt.Println("Using all namespace")
 	} else {
-		logger.Printf("Using %s namespaces", namespaces)
+		fmt.Printf("Using %s namespaces\n", namespaces)
 	}
 
 	kubeClient, err := createKubeClient(opts.Apiserver, opts.Kubeconfig)
 	if err != nil {
-		logger.Fatalf("Failed to create client: %v", err)
+		log.Fatalf("Failed to create client: %v", err)
 	}
 
-	ksmMetricsRegistry := prometheus.NewRegistry()
-	// ksmMetricsRegistry.Register(collectors.ResourcesPerScrapeMetric)
-	// ksmMetricsRegistry.Register(collectors.ScrapeErrorTotalMetric)
-	ksmMetricsRegistry.Register(prometheus.NewProcessCollector(os.Getpid(), ""))
-	ksmMetricsRegistry.Register(prometheus.NewGoCollector())
-	go telemetryServer(ksmMetricsRegistry, opts.TelemetryHost, opts.TelemetryPort)
+	metricsRegistry := prometheus.NewRegistry()
+	metricsRegistry.Register(icollectors.ResourcesPerScrapeMetric)
+	metricsRegistry.Register(icollectors.ScrapeErrorTotalMetric)
+	metricsRegistry.Register(prometheus.NewProcessCollector(os.Getpid(), ""))
+	metricsRegistry.Register(prometheus.NewGoCollector())
+	go telemetryServer(metricsRegistry, opts.TelemetryHost, opts.TelemetryPort)
 
 	registry := prometheus.NewRegistry()
 	registerCollectors(registry, kubeClient, collectors, namespaces)
@@ -101,14 +98,14 @@ func createKubeClient(apiserver string, kubeconfig string) (versioned.Interface,
 	// Informers don't seem to do a good job logging error messages when it
 	// can't reach the server, making debugging hard. This makes it easier to
 	// figure out if apiserver is configured incorrectly.
-	logger.Printf("Testing communication with server")
+	fmt.Printf("Testing communication with server\n")
 	v, err := client.Discovery().ServerVersion()
 	if err != nil {
-		return nil, fmt.Errorf("ERROR communicating with apiserver: %v", err)
+		return nil, fmt.Errorf("ERROR communicating with apiserver: %v\n", err)
 	}
-	logger.Printf("Running with Kubernetes cluster version: v%s.%s. git version: %s. git tree state: %s. commit: %s. platform: %s",
+	fmt.Printf("Running with Kubernetes cluster version: v%s.%s. git version: %s. git tree state: %s. commit: %s. platform: %s\n",
 		v.Major, v.Minor, v.GitVersion, v.GitTreeState, v.GitCommit, v.Platform)
-	logger.Printf("Communication with server successful")
+	fmt.Printf("Communication with server successful\n")
 
 	return client, nil
 }
@@ -117,7 +114,7 @@ func telemetryServer(registry prometheus.Gatherer, host string, port int) {
 	// Address to listen on for web interface and telemetry
 	listenAddress := net.JoinHostPort(host, strconv.Itoa(port))
 
-	logger.Printf("Starting istio-state-metrics self metrics server: %s", listenAddress)
+	fmt.Printf("Starting istio-state-metrics self metrics server: %s\n", listenAddress)
 
 	mux := http.NewServeMux()
 
@@ -142,7 +139,7 @@ func metricsServer(registry prometheus.Gatherer, host string, port int) {
 	// Address to listen on for web interface and telemetry
 	listenAddress := net.JoinHostPort(host, strconv.Itoa(port))
 
-	logger.Printf("Starting metrics server: %s", listenAddress)
+	fmt.Printf("Starting metrics server: %s\n", listenAddress)
 
 	mux := http.NewServeMux()
 
@@ -187,5 +184,5 @@ func registerCollectors(registry prometheus.Registerer, client versioned.Interfa
 		}
 	}
 
-	logger.Printf("Active collectors: %s", strings.Join(activeCollectors, ","))
+	fmt.Printf("Active collectors: %s\n", strings.Join(activeCollectors, ","))
 }
