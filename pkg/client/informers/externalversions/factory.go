@@ -25,6 +25,7 @@ import (
 	versioned "github.com/douglas-reid/istio-state-metrics/pkg/client/clientset/versioned"
 	config "github.com/douglas-reid/istio-state-metrics/pkg/client/informers/externalversions/config"
 	internalinterfaces "github.com/douglas-reid/istio-state-metrics/pkg/client/informers/externalversions/internalinterfaces"
+	networking "github.com/douglas-reid/istio-state-metrics/pkg/client/informers/externalversions/networking"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -172,8 +173,13 @@ type SharedInformerFactory interface {
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
 	Config() config.Interface
+	Networking() networking.Interface
 }
 
 func (f *sharedInformerFactory) Config() config.Interface {
 	return config.New(f, f.namespace, f.tweakListOptions)
+}
+
+func (f *sharedInformerFactory) Networking() networking.Interface {
+	return networking.New(f, f.namespace, f.tweakListOptions)
 }

@@ -19,6 +19,7 @@ package versioned
 
 import (
 	configv1alpha2 "github.com/douglas-reid/istio-state-metrics/pkg/client/clientset/versioned/typed/config/v1alpha2"
+	networkingv1alpha3 "github.com/douglas-reid/istio-state-metrics/pkg/client/clientset/versioned/typed/networking/v1alpha3"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
@@ -29,13 +30,17 @@ type Interface interface {
 	ConfigV1alpha2() configv1alpha2.ConfigV1alpha2Interface
 	// Deprecated: please explicitly pick a version if possible.
 	Config() configv1alpha2.ConfigV1alpha2Interface
+	NetworkingV1alpha3() networkingv1alpha3.NetworkingV1alpha3Interface
+	// Deprecated: please explicitly pick a version if possible.
+	Networking() networkingv1alpha3.NetworkingV1alpha3Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
 // version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	configV1alpha2 *configv1alpha2.ConfigV1alpha2Client
+	configV1alpha2     *configv1alpha2.ConfigV1alpha2Client
+	networkingV1alpha3 *networkingv1alpha3.NetworkingV1alpha3Client
 }
 
 // ConfigV1alpha2 retrieves the ConfigV1alpha2Client
@@ -47,6 +52,17 @@ func (c *Clientset) ConfigV1alpha2() configv1alpha2.ConfigV1alpha2Interface {
 // Please explicitly pick a version.
 func (c *Clientset) Config() configv1alpha2.ConfigV1alpha2Interface {
 	return c.configV1alpha2
+}
+
+// NetworkingV1alpha3 retrieves the NetworkingV1alpha3Client
+func (c *Clientset) NetworkingV1alpha3() networkingv1alpha3.NetworkingV1alpha3Interface {
+	return c.networkingV1alpha3
+}
+
+// Deprecated: Networking retrieves the default version of NetworkingClient.
+// Please explicitly pick a version.
+func (c *Clientset) Networking() networkingv1alpha3.NetworkingV1alpha3Interface {
+	return c.networkingV1alpha3
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -69,6 +85,10 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	if err != nil {
 		return nil, err
 	}
+	cs.networkingV1alpha3, err = networkingv1alpha3.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
 
 	cs.DiscoveryClient, err = discovery.NewDiscoveryClientForConfig(&configShallowCopy)
 	if err != nil {
@@ -82,6 +102,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
 	cs.configV1alpha2 = configv1alpha2.NewForConfigOrDie(c)
+	cs.networkingV1alpha3 = networkingv1alpha3.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
 	return &cs
@@ -91,6 +112,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
 	cs.configV1alpha2 = configv1alpha2.New(c)
+	cs.networkingV1alpha3 = networkingv1alpha3.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs

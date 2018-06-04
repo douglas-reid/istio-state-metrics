@@ -21,6 +21,8 @@ import (
 	clientset "github.com/douglas-reid/istio-state-metrics/pkg/client/clientset/versioned"
 	configv1alpha2 "github.com/douglas-reid/istio-state-metrics/pkg/client/clientset/versioned/typed/config/v1alpha2"
 	fakeconfigv1alpha2 "github.com/douglas-reid/istio-state-metrics/pkg/client/clientset/versioned/typed/config/v1alpha2/fake"
+	networkingv1alpha3 "github.com/douglas-reid/istio-state-metrics/pkg/client/clientset/versioned/typed/networking/v1alpha3"
+	fakenetworkingv1alpha3 "github.com/douglas-reid/istio-state-metrics/pkg/client/clientset/versioned/typed/networking/v1alpha3/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
@@ -78,4 +80,14 @@ func (c *Clientset) ConfigV1alpha2() configv1alpha2.ConfigV1alpha2Interface {
 // Config retrieves the ConfigV1alpha2Client
 func (c *Clientset) Config() configv1alpha2.ConfigV1alpha2Interface {
 	return &fakeconfigv1alpha2.FakeConfigV1alpha2{Fake: &c.Fake}
+}
+
+// NetworkingV1alpha3 retrieves the NetworkingV1alpha3Client
+func (c *Clientset) NetworkingV1alpha3() networkingv1alpha3.NetworkingV1alpha3Interface {
+	return &fakenetworkingv1alpha3.FakeNetworkingV1alpha3{Fake: &c.Fake}
+}
+
+// Networking retrieves the NetworkingV1alpha3Client
+func (c *Clientset) Networking() networkingv1alpha3.NetworkingV1alpha3Interface {
+	return &fakenetworkingv1alpha3.FakeNetworkingV1alpha3{Fake: &c.Fake}
 }

@@ -10,9 +10,13 @@ import (
 var (
 	DefaultNamespaces = NamespaceList{metav1.NamespaceAll}
 	DefaultCollectors = CollectorSet{
-		"rules": struct{}{},
+		"rules":            struct{}{},
+		"virtualservices":  struct{}{},
+		"destinationrules": struct{}{},
 	}
 	AvailableCollectors = map[string]func(registry prometheus.Registerer, client versioned.Interface, namespaces []string){
-		"rules": collectors.RegisterRuleCollector,
+		"rules":            collectors.RegisterRuleCollector,
+		"virtualservices":  collectors.RegisterVirtualServiceCollector,
+		"destinationrules": collectors.RegisterDestinationRuleCollector,
 	}
 )
