@@ -13,7 +13,7 @@ import (
 var (
 	descVirtualServiceHostsName          = "istio_pilot_virtual_service_hosts"
 	descVirtualServiceHostsHelp          = "Information about Hosts in Pilot VirtualServices"
-	descVirtualServiceHostsDefaultLabels = []string{"VirtualService", "hosts"}
+	descVirtualServiceHostsDefaultLabels = []string{"virtual_service", "hosts"}
 
 	descVirtualServiceHosts = prometheus.NewDesc(
 		descVirtualServiceHostsName,
@@ -25,14 +25,14 @@ var (
 	descVirtualServicesInfo = prometheus.NewDesc(
 		"istio_pilot_virtualService_info",
 		"Information about Pilot VirtualServices",
-		[]string{"VirtualService", "namespace"},
+		[]string{"virtual_service", "namespace"},
 		nil,
 	)
 
 	descVirtualServicesGateways = prometheus.NewDesc(
 		"istio_pilot_virtualService_gateways",
 		"Information about Gateways in Pilot VirtualServices",
-		[]string{"VirtualService", "gateways"},
+		[]string{"virtual_service", "gateways"},
 		nil,
 	)
 )
@@ -81,12 +81,12 @@ func (rc *virtualServiceCollector) Describe(ch chan<- *prometheus.Desc) {
 func (rc *virtualServiceCollector) Collect(ch chan<- prometheus.Metric) {
 	virtualServices, err := rc.store.List()
 	if err != nil {
-		ScrapeErrorTotalMetric.With(prometheus.Labels{"resource": "VirtualService"}).Inc()
+		ScrapeErrorTotalMetric.With(prometheus.Labels{"resource": "virtual_service"}).Inc()
 		return
 	}
-	ScrapeErrorTotalMetric.With(prometheus.Labels{"resource": "VirtualService"}).Add(0)
+	ScrapeErrorTotalMetric.With(prometheus.Labels{"resource": "virtual_service"}).Add(0)
 
-	ResourcesPerScrapeMetric.With(prometheus.Labels{"resource": "VirtualService"}).Observe(float64(len(virtualServices)))
+	ResourcesPerScrapeMetric.With(prometheus.Labels{"resource": "virtual_service"}).Observe(float64(len(virtualServices)))
 	for _, r := range virtualServices {
 		rc.collectVirtualService(ch, r)
 	}
