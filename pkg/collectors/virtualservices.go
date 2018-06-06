@@ -11,9 +11,9 @@ import (
 )
 
 var (
-	descVirtualServiceHostsName          = "istio_pilot_virtual_service_hosts"
+	descVirtualServiceHostsName          = "istio_pilot_virtual_service_host"
 	descVirtualServiceHostsHelp          = "Information about Hosts in Pilot VirtualServices"
-	descVirtualServiceHostsDefaultLabels = []string{"virtual_service", "hosts"}
+	descVirtualServiceHostsDefaultLabels = []string{"virtual_service", "host"}
 
 	descVirtualServiceHosts = prometheus.NewDesc(
 		descVirtualServiceHostsName,
@@ -23,16 +23,16 @@ var (
 	)
 
 	descVirtualServicesInfo = prometheus.NewDesc(
-		"istio_pilot_virtualService_info",
+		"istio_pilot_virtual_service_info",
 		"Information about Pilot VirtualServices",
 		[]string{"virtual_service", "namespace"},
 		nil,
 	)
 
 	descVirtualServicesGateways = prometheus.NewDesc(
-		"istio_pilot_virtualService_gateways",
+		"istio_pilot_virtual_service_gateway",
 		"Information about Gateways in Pilot VirtualServices",
-		[]string{"virtual_service", "gateways"},
+		[]string{"virtual_service", "gateway"},
 		nil,
 	)
 )
