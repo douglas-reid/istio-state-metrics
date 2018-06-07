@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: istio-state-metrics
+  namespace: istio-system
+spec:
+  selector:
+    matchLabels:
+      app: istio-state-metrics
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: istio-state-metrics
+    spec:
+      serviceAccountName: istio-state-metrics
+      containers:
+      - name: istio-state-metrics
+        image: gcr.io/istio-state-metrics/istio-state-metrics:729ed306fdf7839c7ed9c1a00ef6d1b7e6841dcf
+        ports:
+        - name: http-metrics
+          containerPort: 9090
