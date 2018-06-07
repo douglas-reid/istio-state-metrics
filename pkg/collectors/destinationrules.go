@@ -22,28 +22,28 @@ var (
 	descDestinationRulesHost = prometheus.NewDesc(
 		"istio_pilot_destination_rule_host",
 		"Information about Host in Pilot DestinationRules",
-		[]string{"destination_rule", "host"},
+		[]string{"destination_rule", "namespace", "host"},
 		nil,
 	)
 
 	descDestinationRulesTrafficPolicyLoadBalancer = prometheus.NewDesc(
 		"istio_pilot_destination_rule_traffic_policy_loadbalancer",
 		"Information about LoadBalancer in Pilot DestinationRules",
-		[]string{"destination_rule", "lb_type", "lb_identifier", "consistent_hash_minimum_ring_size"},
+		[]string{"destination_rule", "namespace", "lb_type", "lb_identifier", "consistent_hash_minimum_ring_size"},
 		nil,
 	)
 
 	descDestinationRulesTrafficPolicyTcpConnectionPoolSettings = prometheus.NewDesc(
 		"istio_pilot_destination_rule_traffic_policy_tcp_connection_pool_settings",
 		"Information about ConnectionPoolSettings in Pilot DestinationRules",
-		[]string{"destination_rule", "max_connections", "connect_timeout"},
+		[]string{"destination_rule", "namespace", "max_connections", "connect_timeout"},
 		nil,
 	)
-	
+
 	descDestinationRulesTrafficPolicyHttpConnectionPoolSettings = prometheus.NewDesc(
 		"istio_pilot_destination_rule_traffic_policy_http_connection_pool_settings",
 		"Information about ConnectionPoolSettings in Pilot DestinationRules",
-		[]string{"destination_rule", "http1_max_pending_requests",
+		[]string{"destination_rule", "namespace", "http1_max_pending_requests",
 			"http2_max_requests", "max_requests_per_connection", "max_retries"},
 		nil,
 	)
@@ -51,7 +51,7 @@ var (
 	descDestinationRulesTrafficPolicyOutlierDetection = prometheus.NewDesc(
 		"istio_pilot_destination_rule_traffic_policy_outlier_detection",
 		"Information about OutlierDetection in Pilot DestinationRules",
-		[]string{"destination_rule", "consecutive_errors",
+		[]string{"destination_rule", "namespace", "consecutive_errors",
 			"interval", "base_ejection_time", "max_ejection_percent"},
 		nil,
 	)
@@ -59,14 +59,14 @@ var (
 	descDestinationRulesTrafficPolicyTlsSetting = prometheus.NewDesc(
 		"istio_pilot_destination_rule_traffic_policy_tls_settings",
 		"Information about TLS Settings of TrafficPolicy in Pilot DestinationRules",
-		[]string{"destination_rule", "mode", "client_certificate", "private_key", "ca_certificates", "subject_alt_names", "sni"},
+		[]string{"destination_rule", "namespace", "mode", "client_certificate", "private_key", "ca_certificates", "subject_alt_names", "sni"},
 		nil,
 	)
 
 	descDestinationRulesTrafficPolicyPortTrafficPolicy = prometheus.NewDesc(
 		"istio_pilot_destination_rule_traffic_policy_port_level_settings",
 		"Information about PortTrafficPolicy in Pilot DestinationRules",
-		[]string{"destination_rule", "port_name", "port_number",
+		[]string{"destination_rule", "namespace", "port_name", "port_number",
 			"lb_type", "lb_identifier", "lb_consistent_hash_minimum_ring_size", "tcp_max_connections", "tcp_connect_timeout", "http_http1_max_pending_requests",
 			"http_http2_max_requests", "http_max_requests_per_connection", "http_max_retries", "http_consecutive_errors",
 			"http_interval", "http_base_ejection_time", "http_max_ejection_percent", "mode", "client_certificate", "private_key", "ca_certificates", "subject_alt_names", "sni"},
@@ -133,13 +133,13 @@ func (rc *destinationRuleCollector) collectDestinationRule(ch chan<- prometheus.
 	// destinationRule info metric
 	ch <- prometheus.MustNewConstMetric(descDestinationRulesInfo, prometheus.GaugeValue, 1, r.Name, r.Namespace)
 	ch <- prometheus.MustNewConstMetric(descDestinationRulesHost, prometheus.GaugeValue, 1,
-		fmt.Sprintf("%s.%s", r.Name, r.Namespace),
+		r.Name, r.Namespace,
 		r.Spec.Host)
 	if r.Spec.TrafficPolicy != nil {
 		if r.Spec.TrafficPolicy.Tls != nil {
 			mode, clientCertificate, privateKey, caCertificates, subjectAltNames, sni := getTlsSettingsVars(r.Spec.TrafficPolicy.Tls)
 			ch <- prometheus.MustNewConstMetric(descDestinationRulesTrafficPolicyTlsSetting, prometheus.GaugeValue, 1,
-				fmt.Sprintf("%s.%s", r.Name, r.Namespace),
+				r.Name, r.Namespace,
 				mode, clientCertificate, privateKey, caCertificates, subjectAltNames, sni,
 			)
 		}
@@ -147,15 +147,15 @@ func (rc *destinationRuleCollector) collectDestinationRule(ch chan<- prometheus.
 		if r.Spec.TrafficPolicy.ConnectionPool != nil {
 			tcpMaxConnections, tcpConnectTimeout := getTcpConnectionPoolVars(r.Spec.TrafficPolicy.ConnectionPool)
 			ch <- prometheus.MustNewConstMetric(descDestinationRulesTrafficPolicyTcpConnectionPoolSettings, prometheus.GaugeValue, 1,
-				fmt.Sprintf("%s.%s", r.Name, r.Namespace),
+				r.Name, r.Namespace,
 				tcpMaxConnections, tcpConnectTimeout,
 			)
-			
+
 			httpHttp1MaxPendingRequests, httpHttp2MaxRequests,
-				httpMaxRequestsPerConnection, httpMaxRetries := getConnectionPoolVars(r.Spec.TrafficPolicy.ConnectionPool)
+				httpMaxRequestsPerConnection, httpMaxRetries := getHttpConnectionPoolVars(r.Spec.TrafficPolicy.ConnectionPool)
 			ch <- prometheus.MustNewConstMetric(descDestinationRulesTrafficPolicyHttpConnectionPoolSettings, prometheus.GaugeValue, 1,
-				fmt.Sprintf("%s.%s", r.Name, r.Namespace),
-				tcpMaxConnections, httpHttp2MaxRequests,
+				r.Name, r.Namespace,
+				httpHttp1MaxPendingRequests, httpHttp2MaxRequests,
 				httpMaxRequestsPerConnection, httpMaxRetries,
 			)
 		}
@@ -163,7 +163,7 @@ func (rc *destinationRuleCollector) collectDestinationRule(ch chan<- prometheus.
 		if r.Spec.TrafficPolicy.LoadBalancer != nil {
 			lbType, lbIdentifier, consistentHashMinimumRingSize := getLoadBalancerVars(r.Spec.TrafficPolicy.LoadBalancer)
 			ch <- prometheus.MustNewConstMetric(descDestinationRulesTrafficPolicyLoadBalancer, prometheus.GaugeValue, 1,
-				fmt.Sprintf("%s.%s", r.Name, r.Namespace),
+				r.Name, r.Namespace,
 				lbType, lbIdentifier, consistentHashMinimumRingSize,
 			)
 		}
@@ -172,7 +172,7 @@ func (rc *destinationRuleCollector) collectDestinationRule(ch chan<- prometheus.
 			httpConsecutiveErrors,
 				httpInterval, httpBaseEjectionTime, httpMaxEjectionPercent := getOutlierDetectionVars(r.Spec.TrafficPolicy.OutlierDetection)
 			ch <- prometheus.MustNewConstMetric(descDestinationRulesTrafficPolicyOutlierDetection, prometheus.GaugeValue, 1,
-				fmt.Sprintf("%s.%s", r.Name, r.Namespace),
+				r.Name, r.Namespace,
 				httpConsecutiveErrors, httpInterval, httpBaseEjectionTime, httpMaxEjectionPercent,
 			)
 		}
@@ -181,13 +181,14 @@ func (rc *destinationRuleCollector) collectDestinationRule(ch chan<- prometheus.
 			for _, v := range r.Spec.TrafficPolicy.PortLevelSettings {
 				portName, portNumber := getPortInfo(v.Port)
 				lbType, lbIdentifier, consistentHashMinimumRingSize := getLoadBalancerVars(v.LoadBalancer)
-				tcpMaxConnections, tcpConnectTimeout, httpHttp1MaxPendingRequests, httpHttp2MaxRequests,
-					httpMaxRequestsPerConnection, httpMaxRetries := getConnectionPoolVars(v.ConnectionPool)
+				tcpMaxConnections, tcpConnectTimeout := getTcpConnectionPoolVars(r.Spec.TrafficPolicy.ConnectionPool)
+				httpHttp1MaxPendingRequests, httpHttp2MaxRequests,
+					httpMaxRequestsPerConnection, httpMaxRetries := getHttpConnectionPoolVars(r.Spec.TrafficPolicy.ConnectionPool)
 				httpConsecutiveErrors,
 					httpInterval, httpBaseEjectionTime, httpMaxEjectionPercent := getOutlierDetectionVars(v.OutlierDetection)
 				mode, clientCertificate, privateKey, caCertificates, subjectAltNames, sni := getTlsSettingsVars(v.Tls)
 				ch <- prometheus.MustNewConstMetric(descDestinationRulesTrafficPolicyPortTrafficPolicy, prometheus.GaugeValue, 1,
-					fmt.Sprintf("%s.%s", r.Name, r.Namespace),
+					r.Name, r.Namespace,
 					portName, portNumber,
 					lbType, lbIdentifier, consistentHashMinimumRingSize,
 					tcpMaxConnections, tcpConnectTimeout, httpHttp1MaxPendingRequests, httpHttp2MaxRequests,
@@ -227,7 +228,7 @@ func getTcpConnectionPoolVars(cp *v1alpha3.ConnectionPoolSettings) (tcpMaxConnec
 	return
 }
 
-func getHttpConnectionPoolVars(cp *v1alpha3.ConnectionPoolSettings) ( httpHttp1MaxPendingRequests string, httpHttp2MaxRequests string, httpMaxRequestsPerConnection string, httpMaxRetries string) {
+func getHttpConnectionPoolVars(cp *v1alpha3.ConnectionPoolSettings) (httpHttp1MaxPendingRequests string, httpHttp2MaxRequests string, httpMaxRequestsPerConnection string, httpMaxRetries string) {
 	if cp == nil {
 		return
 	}
@@ -247,10 +248,6 @@ func getLoadBalancerVars(lb *v1alpha3.LoadBalancerSettings) (lbType string, lbId
 		return
 	}
 
-	/*if x, ok := lb.GetLbPolicy().(*v1alpha3.LoadBalancerSettings_Simple); ok {
-		lbType ="simple"
-		lbIdentifier = x.Simple.String()
-	}*/
 	if lb.ConsistentHash != nil {
 		//if x, ok := lb.GetLbPolicy().(*v1alpha3.LoadBalancerSettings_ConsistentHash); ok {
 		lbType = "consistent_hash"

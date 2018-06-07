@@ -2,7 +2,6 @@ package collectors
 
 import (
 	"context"
-	"fmt"
 	"github.com/douglas-reid/istio-state-metrics/pkg/apis/networking/v1alpha3"
 	"github.com/douglas-reid/istio-state-metrics/pkg/client/clientset/versioned"
 	informers "github.com/douglas-reid/istio-state-metrics/pkg/client/informers/externalversions/networking/v1alpha3"
@@ -13,7 +12,7 @@ import (
 var (
 	descVirtualServiceHostsName          = "istio_pilot_virtual_service_host"
 	descVirtualServiceHostsHelp          = "Information about Hosts in Pilot VirtualServices"
-	descVirtualServiceHostsDefaultLabels = []string{"virtual_service", "host"}
+	descVirtualServiceHostsDefaultLabels = []string{"virtual_service", "namespace", "host"}
 
 	descVirtualServiceHosts = prometheus.NewDesc(
 		descVirtualServiceHostsName,
@@ -32,7 +31,7 @@ var (
 	descVirtualServicesGateways = prometheus.NewDesc(
 		"istio_pilot_virtual_service_gateway",
 		"Information about Gateways in Pilot VirtualServices",
-		[]string{"virtual_service", "gateway"},
+		[]string{"virtual_service", "namespace", "gateway"},
 		nil,
 	)
 )
@@ -95,13 +94,15 @@ func (rc *virtualServiceCollector) Collect(ch chan<- prometheus.Metric) {
 func (rc *virtualServiceCollector) collectVirtualService(ch chan<- prometheus.Metric, r v1alpha3.VirtualService) {
 	for _, host := range r.Spec.Hosts {
 		ch <- prometheus.MustNewConstMetric(descVirtualServiceHosts, prometheus.GaugeValue, 1,
-			fmt.Sprintf("%s.%s", r.Name, r.Namespace),
+			r.Name,
+			r.Namespace,
 			host)
 	}
 
 	for _, gateway := range r.Spec.Gateways {
 		ch <- prometheus.MustNewConstMetric(descVirtualServicesGateways, prometheus.GaugeValue, 1,
-			fmt.Sprintf("%s.%s", r.Name, r.Namespace),
+			r.Name,
+			r.Namespace,
 			gateway)
 	}
 
