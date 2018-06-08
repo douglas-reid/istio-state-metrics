@@ -38,7 +38,7 @@ var (
 	)
 
 	descVirtualServicesHttpMatchInfo = prometheus.NewDesc(
-		"istio_pilot_virtual_service_http_route_info",
+		"istio_pilot_virtual_service_http_match_info",
 		"Information about Pilot VirtualServices Http Route Info",
 		[]string{"virtual_service", "namespace", "uri_exact", "uri_prefix", "uri_regex",
 			"scheme_exact", "scheme_prefix", "scheme_regex", "method_exact", "method_prefix", "method_regex",
@@ -47,7 +47,7 @@ var (
 	)
 
 	descVirtualServicesHttpRouteInfo = prometheus.NewDesc(
-		"istio_pilot_virtual_service_http_match_info",
+		"istio_pilot_virtual_service_http_route_info",
 		"Information about Pilot VirtualServices Http Match Info",
 		[]string{"virtual_service", "namespace", "destination_host",
 			"destination_subset", "destination_port_name", "destination_port_number", "weight"},
