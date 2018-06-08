@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	v1alpha2 "github.com/douglas-reid/istio-state-metrics/pkg/apis/config/v1alpha2"
+	v1alpha3 "github.com/douglas-reid/istio-state-metrics/pkg/apis/networking/v1alpha3"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 )
@@ -54,6 +55,12 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	// Group=config.istio.io, Version=v1alpha2
 	case v1alpha2.SchemeGroupVersion.WithResource("rules"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Config().V1alpha2().Rules().Informer()}, nil
+
+		// Group=networking.istio.io, Version=v1alpha3
+	case v1alpha3.SchemeGroupVersion.WithResource("destinationrules"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Networking().V1alpha3().DestinationRules().Informer()}, nil
+	case v1alpha3.SchemeGroupVersion.WithResource("virtualservices"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Networking().V1alpha3().VirtualServices().Informer()}, nil
 
 	}
 

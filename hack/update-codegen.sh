@@ -9,5 +9,5 @@ CODEGEN_PKG=${CODEGEN_PKG:-$(cd ${SCRIPT_ROOT}; ls -d -1 ./vendor/k8s.io/code-ge
 
 vendor/k8s.io/code-generator/generate-groups.sh all \
   github.com/douglas-reid/istio-state-metrics/pkg/client github.com/douglas-reid/istio-state-metrics/pkg/apis \
-  config:v1alpha2 \
+  "config:v1alpha2 networking:v1alpha3" \
   --go-header-file ${SCRIPT_ROOT}/hack/custom-boilerplate.go.txt
