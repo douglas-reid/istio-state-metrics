@@ -16,7 +16,7 @@ spec:
       serviceAccountName: istio-state-metrics
       containers:
       - name: istio-state-metrics
-        image: gcr.io/istio-state-metrics/istio-state-metrics:729ed306fdf7839c7ed9c1a00ef6d1b7e6841dcf
+        image: gcr.io/istio-state-metrics/istio-state-metrics:0168dced0a6bb3dd6503fe5c138c82ea74e80214
         ports:
         - name: http-metrics
           containerPort: 9090
